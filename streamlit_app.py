@@ -1,56 +1,36 @@
 import streamlit as st
-from openai import OpenAI
+import json
 
-# Show title and description.
-st.title("💬 Chatbot")
-st.write(
-    "This is a simple chatbot that uses OpenAI's GPT-3.5 model to generate responses. "
-    "To use this app, you need to provide an OpenAI API key, which you can get [here](https://platform.openai.com/account/api-keys). "
-    "You can also learn how to build this app step by step by [following our tutorial](https://docs.streamlit.io/develop/tutorials/llms/build-conversational-apps)."
-)
+# Load decision tree from JSON
+with open("decision_tree.json", "r") as f:
+    DECISION_TREE = json.load(f)
 
-# Ask user for their OpenAI API key via `st.text_input`.
-# Alternatively, you can store the API key in `./.streamlit/secrets.toml` and access it
-# via `st.secrets`, see https://docs.streamlit.io/develop/concepts/connections/secrets-management
-openai_api_key = st.text_input("OpenAI API Key", type="password")
-if not openai_api_key:
-    st.info("Please add your OpenAI API key to continue.", icon="🗝️")
-else:
+# Initialize session state
+if "node" not in st.session_state:
+    st.session_state.node = "start"
 
-    # Create an OpenAI client.
-    client = OpenAI(api_key=openai_api_key)
+# Initialize a simple chat history
+if "history" not in st.session_state:
+    st.session_state.history = []
 
-    # Create a session state variable to store the chat messages. This ensures that the
-    # messages persist across reruns.
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+current_node = DECISION_TREE[st.session_state.node]
 
-    # Display the existing chat messages via `st.chat_message`.
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+st.write("### Chatbot")
+# Display chat history
+for msg in st.session_state.history:
+    st.write(msg)
 
-    # Create a chat input field to allow the user to enter a message. This will display
-    # automatically at the bottom of the page.
-    if prompt := st.chat_input("What is up?"):
+st.write(current_node["message"])
 
-        # Store and display the current prompt.
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        # Generate a response using the OpenAI API.
-        stream = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": m["role"], "content": m["content"]}
-                for m in st.session_state.messages
-            ],
-            stream=True,
-        )
-
-        # Stream the response to the chat using `st.write_stream`, then store it in 
-        # session state.
-        with st.chat_message("assistant"):
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+# Display options as buttons
+for option in current_node["options"]:
+    if st.button(option):
+        # Save current message and user choice to history
+        st.session_state.history.append(f"**You:** {option}")
+        st.session_state.history.append(f"**Bot:** {DECISION_TREE[option]['message']}")
+        # Move to the next node
+        st.session_state.node = option
+        # Rerun automatically via Streamlit's normal rerun
+        st.experimental_rerun = lambda: None  # workaround in new versions
+        st.session_state.node = option
+        st.experimental_rerun()  # works in older versions

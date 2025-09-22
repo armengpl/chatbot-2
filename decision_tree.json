@@ -1,0 +1,34 @@
+{
+  "start": {
+    "message": "Welcome! What do you want to know?",
+    "options": ["Pricing", "Support", "Hours"]
+  },
+  "Pricing": {
+    "message": "Our pricing starts at $10/month. Want more info?",
+    "options": ["Yes", "No"]
+  },
+  "Yes": {
+    "message": "We have Basic, Pro, and Enterprise plans. Do you want a link to the full pricing?",
+    "options": ["Yes_Link", "No"]
+  },
+  "No": {
+    "message": "Thanks for chatting! Goodbye!",
+    "options": []
+  },
+  "Yes_Link": {
+    "message": "Here’s the link: https://example.com/pricing",
+    "options": ["Back to start"]
+  },
+  "Support": {
+    "message": "You can contact support at support@example.com. Back to main menu?",
+    "options": ["Back to start", "No"]
+  },
+  "Hours": {
+    "message": "We’re open Monday to Friday, 9am to 5pm. Back to main menu?",
+    "options": ["Back to start", "No"]
+  },
+  "Back to start": {
+    "message": "Welcome back! What do you want to know?",
+    "options": ["Pricing", "Support", "Hours"]
+  }
+}
