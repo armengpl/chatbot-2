@@ -1,36 +1,42 @@
 import streamlit as st
 import json
 
-# Load decision tree from JSON
+# Load the decision tree from JSON
 with open("decision_tree.json", "r") as f:
     DECISION_TREE = json.load(f)
 
 # Initialize session state
 if "node" not in st.session_state:
     st.session_state.node = "start"
-
-# Initialize a simple chat history
 if "history" not in st.session_state:
     st.session_state.history = []
+if "node_stack" not in st.session_state:
+    st.session_state.node_stack = []
 
-current_node = DECISION_TREE[st.session_state.node]
+def go_to_node(option):
+    # Handle Back button
+    if option == "Back" and st.session_state.node_stack:
+        st.session_state.node = st.session_state.node_stack.pop()
+    else:
+        st.session_state.node_stack.append(st.session_state.node)
+        st.session_state.node = option
+    
+    # Save chat history
+    st.session_state.history.append(f"**You:** {option}")
+    st.session_state.history.append(f"**Bot:** {DECISION_TREE[st.session_state.node]['message']}")
 
-st.write("### Chatbot")
 # Display chat history
+st.title("Rules-Based Chatbot")
 for msg in st.session_state.history:
     st.write(msg)
 
-st.write(current_node["message"])
+# Display current node message if not empty
+current_node = DECISION_TREE[st.session_state.node]
+if not st.session_state.history or st.session_state.history[-1] != f"**Bot:** {current_node['message']}":
+    st.write(f"**Bot:** {current_node['message']}")
 
 # Display options as buttons
 for option in current_node["options"]:
     if st.button(option):
-        # Save current message and user choice to history
-        st.session_state.history.append(f"**You:** {option}")
-        st.session_state.history.append(f"**Bot:** {DECISION_TREE[option]['message']}")
-        # Move to the next node
-        st.session_state.node = option
-        # Rerun automatically via Streamlit's normal rerun
-        st.experimental_rerun = lambda: None  # workaround in new versions
-        st.session_state.node = option
-        st.experimental_rerun()  # works in older versions
+        go_to_node(option)
+        st.experimental_rerun()
